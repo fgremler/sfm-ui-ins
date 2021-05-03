@@ -28,6 +28,8 @@ HISTORY_NOTE_WIDGET = forms.Textarea(attrs={'rows': 4})
 SCHEDULE_HELP = "How frequently you want data to be retrieved."
 INCREMENTAL_LABEL = "Incremental harvest"
 INCREMENTAL_HELP = "Only collect new items since the last data retrieval."
+HARVEST_MEDIA_LABEL = "Harvest media"
+HARVEST_MEDIA_HELP = "Harvest media URLs embedded in tweets or posts."
 GROUP_HELP = "Your default group is your username, unless the SFM team has added you to another group."
 
 
@@ -168,12 +170,13 @@ class CollectionTwitterUserTimelineForm(BaseCollectionForm):
                                                                                         "for suspended accounts.")
     protected_accounts_options = forms.BooleanField(initial=False, required=False, label="Automatically delete seeds "
                                                                                          "for protected accounts.")
+    harvest_media = forms.BooleanField(initial=True, required=False, label=HARVEST_MEDIA_LABEL, help_text=HARVEST_MEDIA_HELP)
 
     def __init__(self, *args, **kwargs):
         super(CollectionTwitterUserTimelineForm, self).__init__(*args, **kwargs)
         self.helper.layout[0][5].extend(('incremental',
                                          'deleted_accounts_option', 'suspended_accounts_option',
-                                         'protected_accounts_options'))
+                                         'protected_accounts_options', 'harvest_media'))
 
         if self.instance and self.instance.harvest_options:
             harvest_options = json.loads(self.instance.harvest_options)
@@ -185,6 +188,8 @@ class CollectionTwitterUserTimelineForm(BaseCollectionForm):
                 self.fields['protected_accounts_options'].initial = harvest_options["deactivate_unauthorized_seeds"]
             if "deactivate_suspended_seeds" in harvest_options:
                 self.fields['suspended_accounts_option'].initial = harvest_options["deactivate_suspended_seeds"]
+            if "harvest_media" in harvest_options:
+                self.fields['harvest_media'].initial = harvest_options["harvest_media"]
 
     def save(self, commit=True):
         m = super(CollectionTwitterUserTimelineForm, self).save(commit=False)
@@ -193,7 +198,8 @@ class CollectionTwitterUserTimelineForm(BaseCollectionForm):
             "incremental": self.cleaned_data["incremental"],
             "deactivate_not_found_seeds": self.cleaned_data["deleted_accounts_option"],
             "deactivate_unauthorized_seeds": self.cleaned_data["protected_accounts_options"],
-            "deactivate_suspended_seeds": self.cleaned_data["suspended_accounts_option"]
+            "deactivate_suspended_seeds": self.cleaned_data["suspended_accounts_option"],
+            "harvest_media": self.cleaned_data["harvest_media"]
         }
         m.harvest_options = json.dumps(harvest_options, sort_keys=True)
         m.save()
@@ -276,6 +282,100 @@ class CollectionFlickrUserForm(BaseCollectionForm):
         return m
 
 
+class CollectionFacebookUserTimelineForm(BaseCollectionForm):
+    incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
+    harvest_media = forms.BooleanField(initial=True, required=False, label=HARVEST_MEDIA_LABEL, help_text=HARVEST_MEDIA_HELP)
+
+    def __init__(self, *args, **kwargs):
+        super(CollectionFacebookUserTimelineForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][5].extend(('incremental', 'harvest_media'))
+
+        if self.instance and self.instance.harvest_options:
+            harvest_options = json.loads(self.instance.harvest_options)
+            if "incremental" in harvest_options:
+                self.fields['incremental'].initial = harvest_options["incremental"]
+            if "harvest_media" in harvest_options:
+                self.fields['harvest_media'].initial = harvest_options["harvest_media"]
+
+    def save(self, commit=True):
+        m = super(CollectionFacebookUserTimelineForm, self).save(commit=False)
+        m.harvest_type = Collection.FACEBOOK_USER_TIMELINE
+        harvest_options = {
+            "incremental": self.cleaned_data["incremental"],
+            "harvest_media": self.cleaned_data["harvest_media"]
+        }
+        m.harvest_options = json.dumps(harvest_options, sort_keys=True)
+        m.save()
+        return m
+
+
+class CollectionFacebookUserBioForm(BaseCollectionForm):
+    incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
+
+    def __init__(self, *args, **kwargs):
+        super(CollectionFacebookUserBioForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][5].extend(('incremental',))
+
+        if self.instance and self.instance.harvest_options:
+            harvest_options = json.loads(self.instance.harvest_options)
+            if "incremental" in harvest_options:
+                self.fields['incremental'].initial = harvest_options['incremental']
+
+    def save(self, commit=True):
+        m = super(CollectionFacebookUserBioForm, self).save(commit=False)
+        m.harvest_type = Collection.FACEBOOK_USER_BIO
+        harvest_options = {
+            "incremental": self.cleaned_data["incremental"]
+        }
+        m.harvest_options = json.dumps(harvest_options, sort_keys=True)
+        m.save()
+        return m
+
+
+class CollectionFacebookUserAdsForm(BaseCollectionForm):
+        incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
+
+        def __init__(self, *args, **kwargs):
+            super(CollectionFacebookUserAdsForm, self).__init__(*args, **kwargs)
+            self.helper.layout[0][5].extend(('incremental',))
+
+            if self.instance and self.instance.harvest_options:
+                harvest_options = json.loads(self.instance.harvest_options)
+                if "incremental" in harvest_options:
+                    self.fields['incremental'].initial = harvest_options['incremental']
+
+        def save(self, commit=True):
+            m = super(CollectionFacebookUserAdsForm, self).save(commit=False)
+            m.harvest_type = Collection.FACEBOOK_USER_ADS
+            harvest_options = {
+                "incremental": self.cleaned_data["incremental"]
+            }
+            m.harvest_options = json.dumps(harvest_options, sort_keys=True)
+            m.save()
+            return m
+
+class CollectionInstagramUserTimelineForm(BaseCollectionForm):
+    incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
+
+    def __init__(self, *args, **kwargs):
+        super(CollectionInstagramUserTimelineForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][5].extend(('incremental',))
+
+        if self.instance and self.instance.harvest_options:
+            harvest_options = json.loads(self.instance.harvest_options)
+            if "incremental" in harvest_options:
+                self.field['incremental'].initial = harvest_options["incremental"]
+
+    def save(self, commit=True):
+        m = super(CollectionInstagramUserTimelineForm, self).save(commit=False)
+        m.harvest_type = Collection.INSTAGRAM_USER_TIMELINE
+        harvest_options = {
+            "incremental": self.cleaned_data["incremental"]
+        }
+        m.harvest_options = json.dumps(harvest_options, sort_keys=True)
+        m.save()
+        return m
+
 class CollectionWeiboTimelineForm(BaseCollectionForm):
     incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
 
@@ -343,6 +443,33 @@ class CollectionTumblrBlogPostsForm(BaseCollectionForm):
         m.harvest_options = json.dumps(harvest_options, sort_keys=True)
         m.save()
         return m
+
+
+class CollectionWebCrawlBrowsertrixForm(BaseCollectionForm):
+        incremental = forms.BooleanField(initial=True, required=False, label=INCREMENTAL_LABEL, help_text=INCREMENTAL_HELP)
+        browsertrix_args = forms.CharField(help_text='Arguments passed to Browsertrix crawler')
+
+        def __init__(self, *args, **kwargs):
+            super(CollectionWebCrawlBrowsertrixForm, self).__init__(*args, **kwargs)
+            self.helper.layout[0][5].extend(('incremental', 'browsertrix_args'))
+
+            if self.instance and self.instance.harvest_options:
+                harvest_options = json.loads(self.instance.harvest_options)
+                if "incremental" in harvest_options:
+                    self.fields['incremental'].initial = harvest_options['incremental']
+                if "browsertrix_args" in harvest_options:
+                    self.fields['browsertrix_args'].initial = harvest_options['browsertrix_args']
+
+        def save(self, commit=True):
+            m = super(CollectionWebCrawlBrowsertrixForm, self).save(commit=False)
+            m.harvest_type = Collection.WEB_CRAWL_BROWSERTRIX
+            harvest_options = {
+                "incremental": self.cleaned_data["incremental"],
+                "browsertrix_args": self.cleaned_data["browsertrix_args"]
+            }
+            m.harvest_options = json.dumps(harvest_options, sort_keys=True)
+            m.save()
+            return m
 
 
 class BaseSeedForm(forms.ModelForm):
@@ -545,6 +672,36 @@ class SeedWeiboSearchForm(BaseSeedForm):
         self.helper.layout[0][0].append('token')
 
 
+class SeedFacebookUserAdsForm(BaseSeedForm):
+    username = forms.CharField(required=True, widget=forms.Textarea(attrs={'rows':1}),
+                            help_text="""A string name for the user account. This can simply be copied
+                                         as the url directing to the account's main page""")
+    uid = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows':1}),
+                            help_text="""Provide the unique FB id Can be retrieved from tools like https://findmyfbid.com/
+                                         If not given, the harvester will retrieve it itself""")
+    iso2c = forms.CharField(required=True, widget=forms.Textarea(attrs={'rows':1, 'size': '2'}),
+                        help_text="""Provide the iso2c todolink of the country where ads
+                                     are displayed - usually the homeland of the fb account
+                                     must be exactly 2 characters (2c)""")
+
+    def __init__(self, *args, **kwargs):
+        super(SeedFacebookUserAdsForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][0].extend(('username', 'uid', 'iso2c'))
+        if self.instance and self.instance.token:
+            _token = json.loads(self.instance.token)
+
+    def save(self, commit=True):
+        m = super(SeedFacebookUserAdsForm, self).save(commit=False)
+        token = dict()
+        token['username'] = self.cleaned_data.get("username").strip()
+        token['uid'] = self.cleaned_data.get("uid").strip()
+        token['iso2c'] = self.cleaned_data.get("iso2c").strip()
+
+        m.token = json.dumps(token, ensure_ascii=False)
+        m.save()
+        return m
+
+
 class SeedTwitterFilterForm(BaseSeedForm):
     track = forms.CharField(required=False, widget=forms.Textarea(attrs={'rows': 4}),
                             help_text="""Separate keywords and phrases with commas. See Twitter <a
@@ -701,6 +858,91 @@ class SeedTumblrBlogPostsForm(BaseSeedForm):
         return clean_blogname(self.cleaned_data.get("uid"))
 
 
+class SeedFacebookUserTimelineForm(BaseSeedForm):
+    class Meta(BaseSeedForm.Meta):
+        fields = ['token', 'uid']
+        fields.extend(BaseSeedForm.Meta.fields)
+        labels = dict(BaseSeedForm.Meta.labels)
+        labels["token"] = "Facebook username"
+        labels["uid"] = "Unique FB id - not compulsory"
+        help_texts = dict(BaseSeedForm.Meta.help_texts)
+        help_texts["token"] = "A string name for the user account. This can simply be copied " \
+                                "as the url directing to the account's main page"
+        help_texts["uid"] = 'Provide the unique FB id' \
+                            'Can be retrieved from tools like https://findmyfbid.com/' \
+                            'If not given, the harvester will retrieve it itself'
+
+        widgets = dict(BaseSeedForm.Meta.widgets)
+        widgets["token"] = forms.TextInput(attrs={'size': '60'})
+        widgets["uid"] = forms.TextInput(attrs={'size': '50'})
+
+    def __init__(self, *args, **kwargs):
+        super(SeedFacebookUserTimelineForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][0].extend(('token', 'uid'))
+
+
+class SeedFacebookUserBioForm(BaseSeedForm):
+    class Meta(BaseSeedForm.Meta):
+        fields = ['token', 'uid']
+        fields.extend(BaseSeedForm.Meta.fields)
+        labels = dict(BaseSeedForm.Meta.labels)
+        labels["token"] = "Facebook username"
+        labels["uid"] = "Unique FB id - not compulsory"
+        help_texts = dict(BaseSeedForm.Meta.help_texts)
+        help_texts["token"] = "A string name for the user account. This can simply be copied " \
+                                "as the url directing to the account's main page"
+        help_texts["uid"] = 'Provide the unique FB id' \
+                            'Can be retrieved from tools like https://findmyfbid.com/' \
+                            'If not given, the harvester will retrieve it itself'
+
+        widgets = dict(BaseSeedForm.Meta.widgets)
+        widgets["token"] = forms.TextInput(attrs={'size': '60'})
+        widgets["uid"] = forms.TextInput(attrs={'size': '50'})
+
+    def __init__(self, *args, **kwargs):
+        super(SeedFacebookUserBioForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][0].extend(('token', 'uid'))
+
+
+class SeedWebCrawlBrowsertrixForm(BaseSeedForm):
+    class Meta(BaseSeedForm.Meta):
+        fields = ['token']
+        fields.extend(BaseSeedForm.Meta.fields)
+        labels = dict(BaseSeedForm.Meta.labels)
+        labels['token'] = 'Seed URL to start browsertrix crawl from'
+        help_texts = dict(BaseSeedForm.Meta.help_texts)
+        help_texts['token'] = 'A valid URL also used as URL prefix if ' \
+                              'no scope is provided in the browsertrix arguments'
+        widgets = dict(BaseSeedForm.Meta.widgets)
+        #widgets['token'] = forms.URLInput()
+        widgets['token'] = forms.TextInput(attrs={'size': '80'})
+
+    def __init__(self, *args, **kwargs):
+        super(SeedWebCrawlBrowsertrixForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][0].append(('token'))
+
+class SeedInstagramUserTimelineForm(BaseSeedForm):
+    class Meta(BaseSeedForm.Meta):
+        fields = ['token', 'uid']
+        fields.extend(BaseSeedForm.Meta.fields)
+        labels = dict(BaseSeedForm.Meta.labels)
+        labels["token"] = "Instagram username"
+        labels["uid"] = "Unique Instagram id"
+        help_texts = dict(BaseSeedForm.Meta.help_texts)
+        help_texts["token"] = "A string name for the user account. This can simply be copied " \
+                                "as the url directing to the account's main page"
+        help_texts["uid"] = 'Provide the unique instagram id (not obligatory)'
+
+        widgets = dict(BaseSeedForm.Meta.widgets)
+        widgets["token"] = forms.TextInput(attrs={'size': '60'})
+        widgets["uid"] = forms.TextInput(attrs={'size': '50'})
+
+    def __init__(self, *args, **kwargs):
+        super(SeedInstagramUserTimelineForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][0].extend(('token', 'uid'))
+
+
+
 class BaseBulkSeedForm(forms.Form):
     TYPES = (('token', 'Username'), ('uid', 'NSID'))
     seeds_type = forms.ChoiceField(required=True, choices=TYPES, widget=forms.RadioSelect)
@@ -830,6 +1072,20 @@ class BaseCredentialForm(forms.ModelForm):
         return cleaned_data
 
 
+class CredentialWebForm(BaseCredentialForm):
+    """Credentials for accessing the web - so far, no authentication supported"""
+
+    def to_token(self):
+        return {}
+
+    def save(self, commit=True):
+        m = super(CredentialWebForm, self).save(commit=False)
+        m.platform = Credential.WEB
+        m.token = json.dumps(self.to_token())
+        m.save()
+        return m
+
+
 class CredentialFlickrForm(BaseCredentialForm):
     key = forms.CharField(required=True)
     secret = forms.CharField(required=True)
@@ -889,6 +1145,40 @@ class CredentialTwitterForm(BaseCredentialForm):
         return m
 
 
+class CredentialFacebookForm(BaseCredentialForm):
+    """Credentials forCredentialFacebookForm - not strictly needed for scraping
+    procedures, but necessary for calling Ads API."""
+
+
+    user_email_fb = forms.CharField(required=True, help_text = "Email used to login to Facebook (should be a test account) - this will be send as plain text to the harvester!")
+    user_password_fb = forms.CharField(required=True,  help_text = "Password used to login to Facebook (should be a test account) - this will be send as plain text to the harvester!")
+
+    # access_token_fb = forms.CharField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        super(CredentialFacebookForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][1].extend(['user_email_fb', 'user_password_fb'])
+
+        if self.instance and self.instance.token:
+            token = json.loads(self.instance.token)
+            self.fields['user_email_fb'].initial = token.get('user_email_fb')
+            self.fields['user_password_fb'].initial = token.get('user_password_fb')
+
+    def to_token(self):
+        return {
+            "user_email_fb": self.cleaned_data.get("user_email_fb", "").strip(),
+            "user_password_fb": self.cleaned_data.get("user_password_fb", "").strip()
+        }
+
+    def save(self, commit=True):
+        m = super(CredentialFacebookForm, self).save(commit=False)
+        m.platform = Credential.FACEBOOK
+        m.token = json.dumps(self.to_token())
+        m.save()
+        return m
+
+
+
 class CredentialTumblrForm(BaseCredentialForm):
     api_key = forms.CharField(required=True)
 
@@ -934,6 +1224,24 @@ class CredentialWeiboForm(BaseCredentialForm):
         m.token = json.dumps(self.to_token())
         m.save()
         return m
+
+class CredentialInstagramForm(BaseCredentialForm):
+    """Credentials for CredentialInstagramForm - strictly needed for scraping procedures"""
+
+
+    user_email_ins = forms.CharField(required=True, help_text = "Email used to login to Instagram (should be a test account) - this will be send as plain text to the harvester!")
+    user_password_ins = forms.CharField(required=True,  help_text = "Password used to login to Instagram (should be a test account) - this will be send as plain text to the harvester!")
+
+    # access_token_fb = forms.CharField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        super(CredentialInstagramForm, self).__init__(*args, **kwargs)
+        self.helper.layout[0][1].extend(['user_email_ins', 'user_password_ins'])
+
+        if self.instance and self.instance.token:
+            token = json.loads(self.instance.token)
+            self.fields['user_email_ins'].initial = token.get('user_email_ins')
+            self.fields['user_password_ins'].initial = token.get('user_password_ins')
 
 
 class SeedChoiceField(forms.ModelMultipleChoiceField):

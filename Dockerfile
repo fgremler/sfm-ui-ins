@@ -19,6 +19,7 @@ ADD docker/ui/envvars /etc/apache2/
 # Add WSGI
 RUN pip3 install mod_wsgi
 ADD docker/ui/wsgi.load /etc/apache2/mods-available/wsgi.load
+RUN echo "Installing a2enmod"
 RUN a2enmod wsgi
 
 # Enable sfm site
