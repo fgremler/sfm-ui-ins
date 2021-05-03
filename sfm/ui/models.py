@@ -310,7 +310,7 @@ class Collection(models.Model):
     FACEBOOK_USER_TIMELINE = 'facebook_user_timeline'
     FACEBOOK_USER_BIO = 'facebook_user_bio'
     FACEBOOK_USER_ADS = 'facebook_user_ads'
-    WEB_CRAWL_BROWSERTRIX = 'web_crawl_browsertrix',
+    WEB_CRAWL_BROWSERTRIX = 'web_crawl_browsertrix'
     INSTAGRAM_USER_TIMELINE = 'instagram_user_timeline'
     SCHEDULE_CHOICES = [
         (1, 'One time harvest'),
@@ -391,7 +391,7 @@ class Collection(models.Model):
         FACEBOOK_USER_BIO: Credential.FACEBOOK,
         FACEBOOK_USER_ADS: Credential.FACEBOOK,
         WEB_CRAWL_BROWSERTRIX: Credential.WEB,
-        INSTAGRAM_USER_TIMELINE: Credential.INSTAGRAM
+        INSTAGRAM_USER_TIMELINE: Credential.INSTAGRAM,
     }
     STREAMING_HARVEST_TYPES = (TWITTER_SAMPLE, TWITTER_FILTER)
     RATE_LIMITED_HARVEST_TYPES = (TWITTER_USER_TIMELINE, TWITTER_SEARCH, FACEBOOK_USER_TIMELINE)
